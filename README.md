@@ -3,3 +3,26 @@
 # Python UM-Meter interface
 
 Support RDTech UM24C, UM25C, UM34C.
+
+## Running
+
+### Bluetooth initialisation
+
+```
+$ sudo killall rfcomm
+$ rfkill block bluetooth
+$ rfkill unblock bluetooth
+$ sudo bluetoothctl
+[bluetooth] power on
+[bluetooth] agent on
+[bluetooth] scan on
+[bluetooth] pair <MAC>
+$ sudo rfcomm connect /dev/rfcomm0 <MAC>
+```
+
+### Application initialisation
+
+```
+$ poetry install --no-dev
+$ poetry run task app -p /dev/rfcomm0
+```
