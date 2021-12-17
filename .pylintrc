@@ -1,0 +1,4 @@
+[MASTER]
+ignore=tests
+init-hook="from pylint.config import find_pylintrc; import os, sys; sys.path.append(os.path.dirname(find_pylintrc()))"
+disable=logging-fstring-interpolation

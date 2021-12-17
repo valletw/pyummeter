@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "pyummeter"
+version = "0.1.0"
+description = "Python UM-Meter interface"
+authors = ["William Vallet <valletw@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+taskipy = "^1.9.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
+pytest-cov = "^3.0.0"
+pytest-flake8 = "^1.0.7"
+pytest-pylint = "^0.18.0"
+pytest-mypy = "^0.8.1"
+pytest-mock = "^3.6.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.taskipy.tasks]
+app = "python -m src.main"
+test = "pytest --cov=src -v --junit-xml=test_results.xml"
+lint_full = "pytest --flake8 --mypy --pylint --lint-only -v --junit-xml=analysis_results.xml"
+lint = "task lint_full --pylint-error-types=EF"

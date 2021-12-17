@@ -1,0 +1,18 @@
+# Tests.
+.coverage*
+htmlcov/
+*_results.*
+*.log
+*.csv
+
+# Python
+__pycache__/
+*_cache/
+*.py[cod]
+dist/
+
+# IDE configuration.
+.project
+.cproject
+.settings/
+.vscode/
