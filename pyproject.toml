@@ -8,6 +8,7 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.8"
 taskipy = "^1.9.0"
+pyserial = "^3.5"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
