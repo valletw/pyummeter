@@ -1,0 +1,36 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@1.5.0
+
+jobs:
+  analysis:
+    executor: python/default
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: poetry
+      - run:
+          name: Run analysis
+          command: poetry run task lint
+      - store_test_results:
+          path: analysis_results.xml
+  test:
+    executor: python/default
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: poetry
+      - run:
+          name: Run test
+          command: poetry run task test
+      - store_test_results:
+          path: test_results.xml
+      - store_artifacts:
+          path: htmlcov
+
+workflows:
+  unit_test:
+    jobs:
+      - analysis
+      - test
