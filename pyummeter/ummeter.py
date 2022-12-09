@@ -103,7 +103,7 @@ class UMmeter():
 
     def close(self):
         """ Close serial port """
-        if self._com is not None and self._com.is_open():
+        if self._com is not None and self._com.is_open:
             self._com.close()
 
     def set_timeout(self, timeout_s: int):
