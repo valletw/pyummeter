@@ -73,7 +73,6 @@ class UMmeter():
         }
         # Do not open serial interface on init.
         self._com = None
-        self._is_open = False
 
     def __str__(self):
         return f"<UM-Meter: tty={self._tty} open={self.is_open()}>"
@@ -87,27 +86,25 @@ class UMmeter():
 
     def is_open(self):
         """ Check if serial port is opened """
-        return self._is_open
+        return self._com is not None and self._com.is_open
 
     def open(self):
         """ Open serial port """
-        if not self.is_open():
-            try:
-                if self._com is None:
-                    # No instance, create it and open interface.
-                    self._com = serial.Serial(self._tty, **self._config)
-                else:
-                    # Instance already created, just open it.
-                    self._com.open()
-                self._is_open = True
-            except Exception as exp:
-                raise IOError("UM-Meter: could not open serial interface") from exp
+        try:
+            if self._com is None:
+                # No instance, create it and open interface.
+                self._com = serial.Serial(self._tty, **self._config)
+
+            if not self._com.is_open:
+                # Instance already created, just open it.
+                self._com.open()
+        except Exception as exp:
+            raise IOError("UM-Meter: could not open serial interface") from exp
 
     def close(self):
         """ Close serial port """
-        if self.is_open() and self._com is not None:
+        if self._com is not None and self._com.is_open():
             self._com.close()
-            self._is_open = False
 
     def set_timeout(self, timeout_s: int):
         """ Configure receive timeout in seconds """
