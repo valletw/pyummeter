@@ -1,6 +1,6 @@
 from datetime import timedelta
 import pytest
-from src.ummeter import UMmeter
+from pyummeter import UMmeter
 
 
 @pytest.fixture

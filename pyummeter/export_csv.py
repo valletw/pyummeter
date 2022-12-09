@@ -2,7 +2,7 @@
 import csv
 from datetime import datetime, timedelta
 from typing import Callable, Optional
-from src.ummeter import UMmeterData
+from pyummeter import UMmeterData
 
 
 def bool_to_str(value: bool) -> str:
