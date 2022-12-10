@@ -11,7 +11,7 @@ def serial(mocker):
 class TestUMmeter:
     def test_init(self, serial):
         with pytest.raises(AssertionError):
-            UMmeter(None)
+            UMmeter(None)  # type: ignore
         with pytest.raises(AssertionError):
             UMmeter("")
         with UMmeter("/dev/tty"):

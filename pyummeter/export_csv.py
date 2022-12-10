@@ -77,13 +77,13 @@ class ExportCSV:
             self._convert(self._FIELD_DATE[2], date)
         ]
         val.extend([
-            self._convert(f[2], data[f[0]])  # type: ignore[misc]
+            self._convert(f[2], data[f[0]])  # type: ignore
             for f in self._FIELDS
         ])
         val.extend([
             self._convert(
                 f[2],
-                data["data_group"][data["data_group_selected"]][f[0]])  # type: ignore[misc]
+                data["data_group"][data["data_group_selected"]][f[0]])  # type: ignore
             for f in self._FIELDS_DG
         ])
         # Write value to CSV file.

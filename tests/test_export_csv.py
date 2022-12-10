@@ -7,13 +7,13 @@ from pyummeter.export_csv import ExportCSV
 
 @pytest.fixture
 def mfile(mocker):
-    return mocker.patch("builtins.open", unittest.mock.mock_open())
+    return mocker.patch("builtins.open", unittest.mock.mock_open())  # type: ignore
 
 
 class TestExportCSV:
     def test_init(self, mfile):
         with pytest.raises(AssertionError):
-            ExportCSV(None)
+            ExportCSV(None)  # type: ignore
         with pytest.raises(AssertionError):
             ExportCSV("")
         export = ExportCSV("test.csv")
