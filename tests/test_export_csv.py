@@ -1,8 +1,8 @@
 import pytest
 import unittest
 from datetime import datetime, timedelta
-from src.export_csv import ExportCSV
-from src.ummeter import UMmeterData
+from pyummeter import UMmeterData
+from pyummeter.export_csv import ExportCSV
 
 
 @pytest.fixture

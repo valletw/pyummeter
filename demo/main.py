@@ -3,8 +3,8 @@ import argparse
 from datetime import datetime
 from time import sleep
 from typing import Optional
-from src.export_csv import ExportCSV
-from src.ummeter import UMmeter
+from pyummeter import UMmeter
+from pyummeter.export_csv import ExportCSV
 
 
 def parse_args():

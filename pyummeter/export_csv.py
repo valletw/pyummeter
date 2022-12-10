@@ -2,20 +2,20 @@
 import csv
 from datetime import datetime, timedelta
 from typing import Callable, Optional
-from src.ummeter import UMmeterData
+from pyummeter import UMmeterData
 
 
-def bool_to_str(value: bool) -> str:
+def _bool_to_str(value: bool) -> str:
     """ Convert bool to string """
     return str(int(value))
 
 
-def datetime_to_str(value: datetime) -> str:
+def _datetime_to_str(value: datetime) -> str:
     """ Convert date to string (ISO format) """
     return value.isoformat(sep=" ")
 
 
-def timedelta_to_str(value: timedelta) -> str:
+def _timedelta_to_str(value: timedelta) -> str:
     """ Convert time delta to string (elapsing seconds) """
     return str(int(value.total_seconds()))
 
@@ -23,7 +23,7 @@ def timedelta_to_str(value: timedelta) -> str:
 class ExportCSV:
     """ CSV export instance """
     _SEP = ";"
-    _FIELD_DATE = ("", "Date", datetime_to_str)
+    _FIELD_DATE = ("", "Date", _datetime_to_str)
     _FIELDS = [
         # UM-Meter field, Description, Conversion method.
         ("voltage", "Voltage (V)", None),
@@ -35,8 +35,8 @@ class ExportCSV:
         ("charging_mode", "Charging Mode", None),
         ("temperature_celsius", "Temperature (°C)", None),
         ("model", "Model", None),
-        ("record_enabled", "Recording", bool_to_str),
-        ("record_duration", "Record duration (sec)", timedelta_to_str),
+        ("record_enabled", "Recording", _bool_to_str),
+        ("record_duration", "Record duration (sec)", _timedelta_to_str),
         ("record_intensity_threshold", "Record intensity (A)", None),
         ("record_capacity_threshold", "Record capacity (Ah)", None),
         ("record_energy_threshold", "Record energy (Wh)", None),

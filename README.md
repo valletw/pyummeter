@@ -20,9 +20,9 @@ $ sudo bluetoothctl
 $ sudo rfcomm connect /dev/rfcomm0 <MAC>
 ```
 
-### Application initialisation
+### Demo application usage
 
 ```
 $ poetry install --no-dev
-$ poetry run task app -p /dev/rfcomm0
+$ poetry run task demo -p /dev/rfcomm0
 ```
