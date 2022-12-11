@@ -27,14 +27,17 @@ if __name__ == "__main__":
         export = ExportCSV(params.export)
     # Run data dump process.
     with UMmeter(params.tty) as meter:
-        while True:
-            data = meter.get_data()
-            now = datetime.now()
-            if export is not None:
-                export.update(now, data)
-            print(
-                f"[{data['model']}] {now.time()}"
-                f" {data['voltage']:1.04f}V {data['intensity']:1.04f}A"
-                f" {data['power']:1.04f}W {data['resistance']}Ohm"
-            )
-            sleep(params.refresh)
+        try:
+            while True:
+                data = meter.get_data()
+                now = datetime.now()
+                if export is not None:
+                    export.update(now, data)
+                print(
+                    f"[{data['model']}] {now.time()}"
+                    f" {data['voltage']:1.04f}V {data['intensity']:1.04f}A"
+                    f" {data['power']:1.04f}W {data['resistance']}Ohm"
+                )
+                sleep(params.refresh)
+        except KeyboardInterrupt:
+            pass
