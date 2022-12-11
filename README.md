@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/valletw/pyummeter.svg?style=shield)](https://github.com/valletw/pyummeter)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/valletw/pyummeter/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/valletw/pyummeter/tree/main)
 
 # Python UM-Meter interface
 

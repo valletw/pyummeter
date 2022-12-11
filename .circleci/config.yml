@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  python: circleci/python@1.5.0
+  python: circleci/python@2.1.1
 
 jobs:
   analysis:
@@ -28,9 +28,30 @@ jobs:
           path: test_results.xml
       - store_artifacts:
           path: htmlcov
+  publish:
+    executor: python/default
+    steps:
+      - checkout
+      - run:
+          name: Publish
+          command:
+            poetry publish --build --username $PYPI_USERNAME --password $PYPI_PASSWORD
 
 workflows:
   unit_test:
     jobs:
-      - analysis
-      - test
+      - analysis:
+          filters: &filters-test
+            tags:
+              ignore: /.*/
+      - test:
+          filters:
+            <<: *filters-test
+  deploy:
+    jobs:
+      - publish:
+          filters:
+            tags:
+              only: /[0-9]+(\.[0-9]+)*/
+            branches:
+              ignore: /.*/
