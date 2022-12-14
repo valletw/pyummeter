@@ -6,7 +6,12 @@ from datetime import timedelta
 from struct import unpack
 from typing import List, Optional, TypedDict
 import serial
-import bluetooth
+_bluetooth_supported = False
+try:
+    import bluetooth
+    _bluetooth_supported = True
+except ModuleNotFoundError:
+    pass    
 import re
 
 
@@ -118,7 +123,7 @@ class UMmeter():
                     self._is_open = True
                 except Exception as exp:
                     raise IOError("UM-Meter: could not open serial interface") from exp
-        elif self._address:
+        elif self._address and _bluetooth_supported:
             try:
                 self._socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
                 self._socket.connect((self._address, 1))
