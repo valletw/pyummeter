@@ -6,6 +6,8 @@ from datetime import timedelta
 from struct import unpack
 from typing import List, Optional, TypedDict
 import serial
+import bluetooth
+import re
 
 
 class UMmeterDataGroup(TypedDict):
@@ -61,19 +63,32 @@ class UMmeter():
         8: ("Samsung", "Samsung")
     }
 
+    _tty = None
+    _config = None
+    _com = None
+
+    _address = None
+    _socket = None
+    _com = None
+
     def __init__(self, tty: str):
         assert tty is not None
         assert len(tty) != 0
-        self._tty = tty
-        self._config = {
-            "baudrate": self._BAUD,
-            "bytesize": int(self._MODE[0]),
-            "parity": self._MODE[1],
-            "stopbits": int(self._MODE[2])
-        }
-        # Do not open serial interface on init.
-        self._com = None
-        self._is_open = False
+
+        if re.match("^[a-fA-F0-9]{2}(:[a-fA-F0-9]{2}){5}$", tty):
+            self._address = tty
+            self._is_open = False
+        else:
+            self._tty = tty
+            self._config = {
+                "baudrate": self._BAUD,
+                "bytesize": int(self._MODE[0]),
+                "parity": self._MODE[1],
+                "stopbits": int(self._MODE[2])
+            }
+            # Do not open serial interface on init.
+            self._com = None
+            self._is_open = False
 
     def __str__(self):
         return f"<UM-Meter: tty={self._tty} open={self.is_open()}>"
@@ -91,29 +106,41 @@ class UMmeter():
 
     def open(self):
         """ Open serial port """
-        if not self.is_open():
+        if self._tty:
+            if not self.is_open():
+                try:
+                    if self._com is None:
+                        # No instance, create it and open interface.
+                        self._com = serial.Serial(self._tty, **self._config)
+                    else:
+                        # Instance already created, just open it.
+                        self._com.open()
+                    self._is_open = True
+                except Exception as exp:
+                    raise IOError("UM-Meter: could not open serial interface") from exp
+        elif self._address:
             try:
-                if self._com is None:
-                    # No instance, create it and open interface.
-                    self._com = serial.Serial(self._tty, **self._config)
-                else:
-                    # Instance already created, just open it.
-                    self._com.open()
+                self._socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+                self._socket.connect((self._address, 1))
                 self._is_open = True
             except Exception as exp:
-                raise IOError("UM-Meter: could not open serial interface") from exp
+                raise IOError("UM-Meter: could not open Bluetooth connection") from exp
 
     def close(self):
         """ Close serial port """
         if self.is_open() and self._com is not None:
             self._com.close()
             self._is_open = False
+        elif self.is_open() and self._socket is not None:
+            self._socket.close()
+            self._is_open = False
 
     def set_timeout(self, timeout_s: int):
         """ Configure receive timeout in seconds """
-        if self._com is None:
-            raise IOError("UM-Meter: serial interface is not opened")
-        self._com.timeout = timeout_s
+        if self._tty:
+            if self._com is None:
+                raise IOError("UM-Meter: serial interface is not opened")
+            self._com.timeout = timeout_s
 
     def get_data(self) -> Optional[UMmeterData]:
         """ Request new data dump
@@ -244,15 +271,28 @@ class UMmeter():
 
     def _send(self, data: bytearray) -> int:
         """ Send raw data to interface, return number of bytes sent """
-        if not self.is_open() or self._com is None:
-            raise IOError("UM-Meter: serial interface is not opened")
-        return self._com.write(data)
+        if self._tty:
+            if not self.is_open() or self._com is None:
+                raise IOError("UM-Meter: serial interface is not opened")
+            return self._com.write(data)
+        elif self._address:
+            if not self._socket:
+                raise IOError("UM-Meter: Bluetooth connection is not opened")
+            return self._socket.send(bytes(data))
 
     def _receive(self, nb: int) -> bytearray:
         """ Receive 'nb' bytes of raw data from interface, return bytes received """
-        if not self.is_open() or self._com is None:
-            raise IOError("UM-Meter: serial interface is not opened")
-        return self._com.read(nb)
+        if self._tty:
+            if not self.is_open() or self._com is None:
+                raise IOError("UM-Meter: serial interface is not opened")
+            return self._com.read(nb)
+        elif self._address:
+            if not self._socket:
+                raise IOError("UM-Meter: Bluetooth connection is not opened")
+            result = b''
+            while len(result) < nb:
+                result += self._socket.recv(nb)
+            return result
 
     @staticmethod
     def _get_model_name(value: int) -> str:
