@@ -3,7 +3,7 @@ import argparse
 from datetime import datetime
 from time import sleep
 from typing import Optional
-from pyummeter import UMmeter
+from pyummeter import UMmeter, UMmeterInterfaceTTY
 from pyummeter.export_csv import ExportCSV
 
 
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     if params.export != "":
         export = ExportCSV(params.export)
     # Run data dump process.
-    with UMmeter(params.tty) as meter:
+    with UMmeter(UMmeterInterfaceTTY(params.tty)) as meter:
         try:
             while True:
                 data = meter.get_data()

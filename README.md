@@ -9,9 +9,9 @@ Support RDTech UM24C, UM25C, UM34C.
 Open an UM-Meter interface and request data:
 
 ```python
-from pyummeter import UMmeter
+from pyummeter import UMmeter, UMmeterInterfaceTTY
 
-with UMmeter("/path/to/serial/port") as meter:
+with UMmeter(UMmeterInterfaceTTY("/path/to/serial/port")) as meter:
     data = meter.get_data()
     print(f"{data['voltage']} V / {data['power']} W")
 ```
@@ -20,11 +20,11 @@ It is also possible to export the data to a CSV file:
 
 ```python
 from datetime import datetime
-from pyummeter import UMmeter
+from pyummeter import UMmeter, UMmeterInterfaceTTY
 from pyummeter.export_csv import ExportCSV
 
 csv = ExportCSV("/path/to/csv")
-with UMmeter("/path/to/serial/port") as meter:
+with UMmeter(UMmeterInterfaceTTY("/path/to/serial/port")) as meter:
     csv.update(datetime.now(), meter.get_data())
 ```
 

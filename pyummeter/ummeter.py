@@ -5,7 +5,7 @@
 from datetime import timedelta
 from struct import unpack
 from typing import List, Optional, TypedDict
-import serial
+from pyummeter.interface_base import UMmeterInterface
 
 
 class UMmeterDataGroup(TypedDict):
@@ -42,8 +42,6 @@ class UMmeterData(TypedDict):
 
 class UMmeter():
     """ UM-Meter instance """
-    _BAUD = 9600
-    _MODE = "8N1"
     _MODEL = {
         0x0963: "UM24C",
         0x09c9: "UM25C",
@@ -61,22 +59,11 @@ class UMmeter():
         8: ("Samsung", "Samsung")
     }
 
-    def __init__(self, tty: str):
-        assert tty is not None
-        assert len(tty) != 0
-        self._tty = tty
-        self._config = {
-            "baudrate": self._BAUD,
-            "bytesize": int(self._MODE[0]),
-            "parity": self._MODE[1],
-            "stopbits": int(self._MODE[2])
-        }
-        # Do not open serial interface on init.
-        self._com = None
-        self._is_open = False
+    def __init__(self, com: UMmeterInterface):
+        self._com: UMmeterInterface = com
 
     def __str__(self):
-        return f"<UM-Meter: tty={self._tty} open={self.is_open()}>"
+        return f"<UM-Meter: com={self._com}>"
 
     def __enter__(self):
         self.open()
@@ -86,34 +73,21 @@ class UMmeter():
         self.close()
 
     def is_open(self):
-        """ Check if serial port is opened """
-        return self._is_open
+        """ Check if connection is opened """
+        return self._com.is_open()
 
     def open(self):
-        """ Open serial port """
-        if not self.is_open():
-            try:
-                if self._com is None:
-                    # No instance, create it and open interface.
-                    self._com = serial.Serial(self._tty, **self._config)
-                else:
-                    # Instance already created, just open it.
-                    self._com.open()
-                self._is_open = True
-            except Exception as exp:
-                raise IOError("UM-Meter: could not open serial interface") from exp
+        """ Open connection """
+        self._com.open()
 
     def close(self):
-        """ Close serial port """
-        if self.is_open() and self._com is not None:
-            self._com.close()
-            self._is_open = False
+        """ Close connection """
+        self._com.close()
 
     def set_timeout(self, timeout_s: int):
         """ Configure receive timeout in seconds """
-        if self._com is None:
-            raise IOError("UM-Meter: serial interface is not opened")
-        self._com.timeout = timeout_s
+        if self.is_open():
+            self._com.set_timeout(timedelta(seconds=timeout_s))
 
     def get_data(self) -> Optional[UMmeterData]:
         """ Request new data dump
@@ -121,8 +95,8 @@ class UMmeter():
             Supported on: UM24C/UM25C/UM34C.
         """
         # Send and wait to received data dump.
-        self._send(bytearray([0xf0]))
-        raw = self._receive(130)
+        self._com.send(bytearray([0xf0]))
+        raw = self._com.receive(130)
         if len(raw) == 130:
             # Extract information.
             (
@@ -176,21 +150,21 @@ class UMmeter():
 
             Supported on: UM24C/UM25C/UM34C.
         """
-        self._send(bytearray([0xf1]))
+        self._com.send(bytearray([0xf1]))
 
     def screen_previous(self):
         """ Go to previous screen
 
             Supported on: UM25C/UM34C.
         """
-        self._send(bytearray([0xf3]))
+        self._com.send(bytearray([0xf3]))
 
     def screen_rotate(self):
         """ Rotate screen
 
             Supported on: UM24C/UM25C/UM34C.
         """
-        self._send(bytearray([0xf2]))
+        self._com.send(bytearray([0xf2]))
 
     def screen_timeout(self, minutes: int):
         """ Set screen timeout in minutes (0-9)
@@ -199,7 +173,7 @@ class UMmeter():
         """
         if minutes < 0 or 9 < minutes:
             raise ValueError("UM-Meter: timeout invalid range")
-        self._send(bytearray([0xe0 + minutes]))
+        self._com.send(bytearray([0xe0 + minutes]))
 
     def screen_brightness(self, brightness: int):
         """ Set screen brightness (0: dim, 5: full)
@@ -208,7 +182,7 @@ class UMmeter():
         """
         if brightness < 0 or 5 < brightness:
             raise ValueError("UM-Meter: brightness invalid range")
-        self._send(bytearray([0xd0 + brightness]))
+        self._com.send(bytearray([0xd0 + brightness]))
 
     def data_threshold(self, threshold_ma: int):
         """ Set recording threshold in mA (0-300)
@@ -217,7 +191,7 @@ class UMmeter():
         """
         if threshold_ma < 0 or 300 < threshold_ma:
             raise ValueError("UM-Meter: threshold invalid range")
-        self._send(bytearray([0xb0 + int(round(threshold_ma / 10))]))
+        self._com.send(bytearray([0xb0 + int(round(threshold_ma / 10))]))
 
     def data_group_set(self, group: int):
         """ Set the selected data group (0-9)
@@ -226,33 +200,21 @@ class UMmeter():
         """
         if group < 0 or 9 < group:
             raise ValueError("UM-Meter: group invalid range")
-        self._send(bytearray([0xa0 + group]))
+        self._com.send(bytearray([0xa0 + group]))
 
     def data_group_next(self):
         """ Switch to next data group
 
             Supported on: UM24C.
         """
-        self._send(bytearray([0xf3]))
+        self._com.send(bytearray([0xf3]))
 
     def data_group_clear(self):
         """ Clear data group
 
             Supported on: UM24C/UM25C/UM34C.
         """
-        self._send(bytearray([0xf4]))
-
-    def _send(self, data: bytearray) -> int:
-        """ Send raw data to interface, return number of bytes sent """
-        if not self.is_open() or self._com is None:
-            raise IOError("UM-Meter: serial interface is not opened")
-        return self._com.write(data)
-
-    def _receive(self, nb: int) -> bytearray:
-        """ Receive 'nb' bytes of raw data from interface, return bytes received """
-        if not self.is_open() or self._com is None:
-            raise IOError("UM-Meter: serial interface is not opened")
-        return self._com.read(nb)
+        self._com.send(bytearray([0xf4]))
 
     @staticmethod
     def _get_model_name(value: int) -> str:
