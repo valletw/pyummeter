@@ -16,6 +16,17 @@ with UMmeter(UMmeterInterfaceTTY("/path/to/serial/port")) as meter:
     print(f"{data['voltage']} V / {data['power']} W")
 ```
 
+```python
+from pyummeter import UMmeter, UMmeterInterfaceBT
+
+with UMmeter(UMmeterInterfaceBT("MAC_address")) as meter:
+    data = meter.get_data()
+    print(f"{data['voltage']} V / {data['power']} W")
+```
+
+Note: Bluetooth interface works only on Linux (the BT socket is not supported on OSX).
+The library `libbluetooth-dev` is required for success import.
+
 It is also possible to export the data to a CSV file:
 
 ```python
